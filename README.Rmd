@@ -1,7 +1,5 @@
 ---
 title: "Stash"
-author: "Mark Roman Miller"
-date: "1/20/2022"
 output: github_document
 editor_options: 
   chunk_output_type: console
@@ -24,6 +22,8 @@ The most important function `do.call.stash`, which mimics the syntax of base R's
 ```{r}
 library(stash)
 
+# Default cache location is ~/.stash-r/cache/"
+# For a demo, put it in a temporary directory.
 cache_dir <- file.path(tempdir(), "readme-test")
 dir.create(cache_dir)
 options(stash.cache_path = cache_dir)
@@ -33,15 +33,15 @@ heavy_function <- function(x) {
   mean(x)
 }
 
-system.time(do.call.stash(heavy_function, list(c(1:20))))
-
-system.time(do.call.stash(heavy_function, list(c(1:20))))
-
-system.time(do.call.stash(heavy_function, list(c(1:20))))
+result <- NULL
+system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
+result
+system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
+result
 ```
 
-The other is setting the directory to store cached results, through `options(stash.cache_path = "the/path/to/your/cache/")`
+The other is setting the directory to store cached results, through `options(stash.cache_path = "the/path/to/your/cache/")`. This call is visible above.
 
 ## Contact
 
-Github issues are great.
+For comments, questions, and requests related to this library, Github issues are best.

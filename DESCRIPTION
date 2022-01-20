@@ -1,12 +1,14 @@
 Package: stash
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Stash Function Results Easily
+Version: 0.0.1
+Author: Mark Roman Miller <mark.roman.miller@gmail.com>
+Maintainer: Mark Roman Miller <mark.roman.miller@gmail.com>
+Description: This library allows you to say 'hey computer, this 
+    function is a big one. Save the result, ok?' and the computer
+    takes care of the rest. Designed for forgetful programmers 
+    in a rush.
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:

@@ -61,8 +61,35 @@ wrap_environment <- function(envir) {
   wrapping_env
 }
 
-#' @importFrom stats aggregate
+# R CMD CHECK generates a warning because 'found' is not a bound variable
+# it's lifted from a column to a variable in 'stats::aggregate'
+# This line of code tells R that this is intentional.
+utils::globalVariables("found")
+
+#' Execute a Function Call and Stash the Result
 #'
+#' Similar to `do.call`, `do.call.stash` constructs and executes a function call.
+#' Additionally, `do.call.stash` stores the result indexed by the function body,
+#' its arguments, and its dependencies.
+#'
+#' @param fun Function to apply. Unlike `do.call`, strings naming the function are not supported
+#' @param argslist List of arguments to `fun`, in order.
+#'
+#' @examples
+#' \dontrun{
+#' heavy_function <- function(x) {
+#'   Sys.sleep(3)
+#'   mean(x)
+#' }
+#'
+#' result <- NULL
+#' system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
+#' result
+#' system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
+#' result
+#' }
+#'
+#' @importFrom stats aggregate
 #' @export
 do.call.stash <- function(fun, argslist) {
   # TODO: break this function up, it's too long.

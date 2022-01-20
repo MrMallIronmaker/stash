@@ -1,7 +1,5 @@
 Stash
 ================
-Mark Roman Miller
-1/20/2022
 
 I work with lots of data. Oftentimes I need to tell my program, “Hey,
 this is a heavy function. Save the result, OK?” This is the role of
@@ -33,6 +31,8 @@ base R’s `do.call`.
 ``` r
 library(stash)
 
+# Default cache location is ~/.stash-r/cache/"
+# For a demo, put it in a temporary directory.
 cache_dir <- file.path(tempdir(), "readme-test")
 dir.create(cache_dir)
 options(stash.cache_path = cache_dir)
@@ -42,29 +42,37 @@ heavy_function <- function(x) {
   mean(x)
 }
 
-system.time(do.call.stash(heavy_function, list(c(1:20))))
+result <- NULL
+system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
 ```
 
     ##    user  system elapsed 
-    ##   0.002   0.001   3.006
+    ##   0.003   0.000   3.005
 
 ``` r
-system.time(do.call.stash(heavy_function, list(c(1:20))))
+result
 ```
 
-    ##    user  system elapsed 
-    ##   0.000   0.000   0.001
+    ## [1] 10.5
 
 ``` r
-system.time(do.call.stash(heavy_function, list(c(1:20))))
+system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
 ```
 
     ##    user  system elapsed 
-    ##   0.001   0.000   0.000
+    ##   0.001   0.000   0.001
+
+``` r
+result
+```
+
+    ## [1] 10.5
 
 The other is setting the directory to store cached results, through
-`options(stash.cache_path = "the/path/to/your/cache/")`
+`options(stash.cache_path = "the/path/to/your/cache/")`. This call is
+visible above.
 
 ## Contact
 
-Github issues are great.
+For comments, questions, and requests related to this library, Github
+issues are best.
