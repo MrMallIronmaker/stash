@@ -7,6 +7,7 @@ library(rlang)
 #' @importFrom digest digest
 NULL
 
+#' @importFrom vctrs fields field
 stable_digest <- function(object) {
   switch(
     typeof(object),
@@ -21,7 +22,11 @@ stable_digest <- function(object) {
       }
     },
     list = {
-      digest(lapply(object, stable_digest), algo = "xxhash64")
+      if ("vctrs_rcrd" %in% class(object)) {
+        stable_digest(lapply(fields(object), function(field_name) {field(object, field_name)}))
+      } else {
+        digest(lapply(object, stable_digest), algo = "xxhash64")
+      }
     },
     double =,
     character =,
