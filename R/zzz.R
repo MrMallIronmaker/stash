@@ -1,3 +1,7 @@
+#' @importFrom rlang fn_env fn_env<-
+#' @importFrom digest digest
+NULL
+
 .onLoad <- function(libname, pkgname) {
   op <- options()
   op.stash <- list(
