@@ -1,13 +1,3 @@
-
-
-tmp_cache_dir <- function() {
-  # move this to a file in R/testthat-helpers.R if this is ever needed in multiple places.
-  # i'm basically trying to get a uuid
-  cache_dir <- file.path(tempdir(), digest::digest(runif(10)))
-  dir.create(cache_dir)
-  cache_dir
-}
-
 test_that("stash caches the simplest results", {
   withr::with_options(
     list(stash.cache_path = tmp_cache_dir()),
