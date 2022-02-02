@@ -21,10 +21,10 @@ stable_digest <- function(object) {
     },
     double =,
     character =,
+    integer =,
     logical = {digest(object, algo = "xxhash64")},
-    { # default (typeof is something else)
-      # TODO: add logger level for this value
-      # cat("Implicitly digested type: ", typeof(object))
+    {
+      log_info("Implicitly digested type: {typeof(object)}", namespace = 'stash')
       digest(object, algo = "xxhash64")
     }
   )

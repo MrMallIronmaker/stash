@@ -2,6 +2,11 @@
 
 export(do.call.stash)
 importFrom(digest,digest)
+importFrom(logger,WARN)
+importFrom(logger,log_debug)
+importFrom(logger,log_error)
+importFrom(logger,log_info)
+importFrom(logger,log_threshold)
 importFrom(rlang,"fn_env<-")
 importFrom(rlang,empty_env)
 importFrom(rlang,env)

@@ -27,7 +27,7 @@ utils::globalVariables("found")
 #' }
 #'
 #' @importFrom stats aggregate
-#' @export
+#' @export do.call.stash
 do.call.stash <- function(fun, argslist) {
   # TODO: break this function up, it's too long.
 
@@ -52,8 +52,7 @@ do.call.stash <- function(fun, argslist) {
       # then we're good to go. This body and argument values do not call
       # anything else in the neighboring environment.
 
-      # TODO: log level on this.
-      # cat("Loading cached file ", first_fname, "\n")
+      log_info("Loading cached file {first_fname}", namespace = 'stash')
       return(first_data$data)
 
     } else if (first_data$type == "dispatch_table") {
@@ -72,7 +71,7 @@ do.call.stash <- function(fun, argslist) {
 
       # assert there should only be ONE TRUE RESULT, otherwise we have problems
       if (nrow(df_subset) > 1) {
-        warning("Improper number of matching rows in metadata table; ignoring cache.\n")
+        log_error("Improper number of matching rows in metadata table; ignoring cache.", namespace = 'stash')
       } else if (nrow(df_subset) == 1) {
         result_fname <- paste0(
           getOption("stash.cache_path"),
@@ -84,13 +83,12 @@ do.call.stash <- function(fun, argslist) {
           df_subset$postfix,
           ".rds"
         )
-        # TODO: log level on this.
-        # cat("Loading cached file ", result_fname, "\n")
+        log_info("Loading cached file {result_fname}", namespace = 'stash')
         return(readRDS(result_fname))
       }
 
     } else {
-      warning("Metadata entry could not be read; ignoring cache.\n")
+      log_error("Metadata entry could not be read; ignoring cache.", namespace = 'stash')
     }
   }
 
@@ -98,8 +96,7 @@ do.call.stash <- function(fun, argslist) {
   # or the metadata could not be processed reasonably [along with warning.]
 
   # Computing
-  # TODO: log level on this.
-  # cat("Computing result to save...\n")
+  log_info("Computing result to save", namespace = 'stash')
 
   # Set up the fancy environment:
   wrapped_envir <- wrap_environment(envir)
@@ -111,14 +108,10 @@ do.call.stash <- function(fun, argslist) {
   # How many objects were accessed in the environment?
   accessed <- wrapped_envir$..stash_accessed
 
-  # TODO: log level on this.
-  # print(env_print(accessed))
-
   if (length(accessed) == 0) {
     # then just cache the result, this has no sourced dependencies.
     saveRDS(list("type" = "result", "data" = result), file = first_fname)
-    # TODO: log level on this.
-    # cat("Saving at ", first_fname, "\n")
+    log_info("Saving at {first_fname}", namespace = 'stash')
   } else {
     # ok, do i need a new metadata table?
     if (is.null(metadata)) {
@@ -144,8 +137,7 @@ do.call.stash <- function(fun, argslist) {
       postfix,
       ".rds"
     )
-    # TODO: log level on this.
-    # cat("Saving metadata at ", first_fname, " and file at ", result_fname, "\n")
+    log_info("Saving metadata at {first_fname} and file at {result_fname}.", namespace = 'stash')
 
     # save the metadata table and result
     saveRDS(list("type" = "dispatch_table", "data" = metadata), file = first_fname)

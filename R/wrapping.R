@@ -3,7 +3,6 @@ wrap_closure <- function(auditor, term, ..stash.closure) {
   term
   ..stash.closure
   function(...) {
-    #cat("Closure activated..\n")
     auditor[[term]] <- stable_digest(..stash.closure)
     ..stash.closure(...)
   }
