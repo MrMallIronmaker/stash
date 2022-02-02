@@ -3,6 +3,35 @@
 # This line of code tells R that this is intentional.
 utils::globalVariables("found")
 
+stash_filepath <- function(fun, argslist, postfix = NULL) {
+  file.path(
+    getOption("stash.cache_path"),
+    paste0(
+      paste0(
+        stable_digest(fun),
+        stable_digest(argslist),
+        postfix,
+        collapse = "-"
+      ),
+      ".rds"
+    )
+  )
+}
+
+lookup_in_dispatch <- function(metadata, envir) {
+  # TODO: what does each step here do and why?
+  df_names <- data.frame(name = unique(metadata$name))
+  df_names$digest <- sapply(df_names$name, function(nm) {stable_digest(envir[[nm]])}, USE.NAMES = F)
+  df_names$found <- T
+
+  df_merged <- merge(metadata, df_names, by = c("name", "digest"), all.x = T)
+  df_merged$found <- !is.na(df_merged$found)
+
+  df_agg <- aggregate(found ~ postfix, df_merged, all)
+  df_subset <- subset(df_agg, found)
+  return(df_subset)
+}
+
 #' Execute a Function Call and Stash the Result
 #'
 #' Similar to `do.call`, `do.call.stash` constructs and executes a function call.
@@ -29,60 +58,30 @@ utils::globalVariables("found")
 #' @importFrom stats aggregate
 #' @export do.call.stash
 do.call.stash <- function(fun, argslist) {
-  # TODO: break this function up, it's too long.
+  envir <- fn_env(fun)
+  metadata <- NULL
 
   # First, look for the default file.
-  first_fname <- paste0(
-    getOption("stash.cache_path"),
-    "/",
-    stable_digest(fun),
-    "-",
-    stable_digest(argslist),
-    ".rds"
-  )
-
-  envir <- fn_env(fun)
+  first_fname <- stash_filepath(fun, argslist)
 
   # If it's a "result",
-  metadata <- NULL
   if (file.exists(first_fname)) {
     first_data <- readRDS(first_fname)
 
     if (first_data$type == "result") {
-      # then we're good to go. This body and argument values do not call
+      # In this case, we're good to go. This body and argument values do not call
       # anything else in the neighboring environment.
-
       log_info("Loading cached file {first_fname}", namespace = 'stash')
       return(first_data$data)
-
-    } else if (first_data$type == "dispatch_table") {
+    }
+    else if (first_data$type == "dispatch_table") {
       # Ok, we need to do some matching.
       metadata <- first_data$data
-      # Check if the relevant environment entries digest correctly.
-      df_names <- data.frame(name = unique(metadata$name))
-      df_names$digest <- sapply(df_names$name, function(nm) {stable_digest(envir[[nm]])}, USE.NAMES = F)
-      df_names$found <- T
-
-      df_merged <- merge(metadata, df_names, by = c("name", "digest"), all.x = T)
-      df_merged$found <- !is.na(df_merged$found)
-
-      df_agg <- aggregate(found ~ postfix, df_merged, all)
-      df_subset <- subset(df_agg, found)
-
-      # assert there should only be ONE TRUE RESULT, otherwise we have problems
-      if (nrow(df_subset) > 1) {
+      dispatch_table_matches <- lookup_in_dispatch(metadata, envir)
+      if (nrow(dispatch_table_matches) > 1) {
         log_error("Improper number of matching rows in metadata table; ignoring cache.", namespace = 'stash')
-      } else if (nrow(df_subset) == 1) {
-        result_fname <- paste0(
-          getOption("stash.cache_path"),
-          "/",
-          stable_digest(fun),
-          "-",
-          stable_digest(argslist),
-          "-",
-          df_subset$postfix,
-          ".rds"
-        )
+      } else if (nrow(dispatch_table_matches) == 1) {
+        result_fname <- stash_filepath(fun, argslist, dispatch_table_matches$postfix)
         log_info("Loading cached file {result_fname}", namespace = 'stash')
         return(readRDS(result_fname))
       }
@@ -98,7 +97,7 @@ do.call.stash <- function(fun, argslist) {
   # Computing
   log_info("Computing result to save", namespace = 'stash')
 
-  # Set up the fancy environment:
+  # Set up the fancy environment to run 'fun' within
   wrapped_envir <- wrap_environment(envir)
   fn_env(fun) <- wrapped_envir
 
@@ -112,7 +111,9 @@ do.call.stash <- function(fun, argslist) {
     # then just cache the result, this has no sourced dependencies.
     saveRDS(list("type" = "result", "data" = result), file = first_fname)
     log_info("Saving at {first_fname}", namespace = 'stash')
+
   } else {
+
     # ok, do i need a new metadata table?
     if (is.null(metadata)) {
       metadata <- data.frame(postfix = character(), name = character(), digest = character())
@@ -127,16 +128,7 @@ do.call.stash <- function(fun, argslist) {
     # add entries to the metadata table
     metadata <- rbind(metadata, data.frame(postfix = postfix, name = accessed_names, digest = accessed_digest))
 
-    result_fname <- paste0(
-      getOption("stash.cache_path"),
-      "/",
-      stable_digest(fun),
-      "-",
-      stable_digest(argslist),
-      "-",
-      postfix,
-      ".rds"
-    )
+    result_fname <- stash_filepath(fun, argslist, postfix)
     log_info("Saving metadata at {first_fname} and file at {result_fname}.", namespace = 'stash')
 
     # save the metadata table and result
