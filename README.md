@@ -1,6 +1,11 @@
 Stash
 ================
 
+> I’m pulling the pavement from under my nails <br> I brush past a
+> garden, dependent on whales<br> The sloping companion I cast down the
+> ash<br> Yanked on my tunic and dangled my stash<br> - “Stash”, by
+> Phish
+
 I work with lots of data. Oftentimes I need to tell my program, “Hey,
 this is a heavy function. Save the result, OK?” This is the role of
 caching libraries. There are many available on CRAN for R code, but none
@@ -60,7 +65,7 @@ system.time({result <- do.call.stash(heavy_function, list(c(1:20)))})
 ```
 
     ##    user  system elapsed 
-    ##   0.001   0.000   0.001
+    ##       0       0       0
 
 ``` r
 result
