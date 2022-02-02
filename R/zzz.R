@@ -1,3 +1,5 @@
+# nocov start
+
 #' @importFrom rlang fn_env fn_env<-
 #' @importFrom digest digest
 #' @importFrom logger log_info log_debug log_error log_threshold WARN
@@ -18,3 +20,5 @@ NULL
 
   invisible()
 }
+
+# nocov end
