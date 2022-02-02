@@ -4,7 +4,7 @@
 \alias{do.call.stash}
 \title{Execute a Function Call and Stash the Result}
 \usage{
-do.call.stash(fun, argslist)
+\method{do}{call.stash}(fun, argslist)
 }
 \arguments{
 \item{fun}{Function to apply. Unlike `do.call`, strings naming the function are not supported}

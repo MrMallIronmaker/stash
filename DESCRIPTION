@@ -14,7 +14,8 @@ LazyData: true
 Imports:
     rlang,
     digest,
-    vctrs
+    vctrs,
+    logger
 Suggests: 
     testthat (>= 3.0.0),
     withr
