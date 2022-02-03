@@ -15,13 +15,13 @@ test_that("parallel parameter", {
         )
       }
 
-      do.call.stash(simple_function, list(x = 1:20, p = c(1, 2, 4, 5)), parallel = "p")
+      do.call.stash(parallel_function, list(x = 1:20, p = c(1, 2, 4, 5)), parallel = "p")
       # TODO: test case when parallel = 3, paralell = list("p", 3)
 
       # returns a data-frame like object, with one column/field named as "p" (first)
-      time_result <- system.time(result <- do.call.stash(simple_function, list(x = 1:20, p = 1:5), parallel = "p"))
-      expect_equal(result, c(210, 2870, 44100, 722666, 12333300))
-      expect_lte(2, time_result[[elapsed]])
+      time_result <- system.time(result <- do.call.stash(parallel_function, list(x = 1:20, p = 1:5), parallel = "p"))
+      expect_equal(result$result, c(210, 2870, 44100, 722666, 12333300))
+      expect_lte(time_result[["elapsed"]], 2)
     }
   )
 })
