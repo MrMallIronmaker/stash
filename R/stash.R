@@ -80,6 +80,38 @@ find_stash <- function(stash_fa, envir) {
   }
 }
 
+do_call_parallel <- function(fun, argslist, parallel, old_result) {
+  # filter out results from old stuff.
+
+  # pull some parallel name.
+  # for now, assume parallel is a length-one vector of column names that are also present in argslist
+  # error cases:
+  # parallel isn't length one
+  # non-unique values
+  # name does not exist in one or the other
+
+  # find new values to compute
+  requested_pvals <- unique(argslist[[parallel]])
+  old_pvals <- unique(old_result[[parallel]])
+  new_to_compute <- setdiff(requested_pvals, old_pvals)
+
+  # compute new values & combine with old values
+  if(length(new_to_compute) > 0) {
+    argslist[[parallel]] <- new_to_compute
+    new_result <- do.call(fun, argslist)
+    full_result <- rbind(old_result, new_result)
+  } else {
+    full_result <- old_result
+  }
+
+  # filter out values to match the request
+  requested_df_left <- data.frame(requested_pvals)
+  names(requested_df_left) <- parallel
+  requested_result <- merge(requested_df_left, full_result, all.x = T)
+
+  return(list(saveable_result = full_result, result = requested_result))
+}
+
 save_stash <- function(result, metadata, stash_fa, accessed) {
   first_fname <- stash_filepath(stash_fa)
 
@@ -140,15 +172,18 @@ save_stash <- function(result, metadata, stash_fa, accessed) {
 #' @export do.call.stash
 do.call.stash <- function(fun, argslist, parallel = NULL) {
 
+  # browser()
   # --- Look for a match ---
   # setup
   envir <- fn_env(fun)
 
   # Look for the default file.
-  stash_fa <- stash_filepath_fa(fun, argslist)
+  hashable_argslist <- argslist
+  hashable_argslist[parallel] <- NULL
+  stash_fa <- stash_filepath_fa(fun, hashable_argslist)
   search_result <- find_stash(stash_fa, envir)
   metadata <- search_result$metadata
-  if (search_result$exists) {
+  if (search_result$exists & is.null(parallel)) {
     return(search_result$data)
   }
 
@@ -160,10 +195,19 @@ do.call.stash <- function(fun, argslist, parallel = NULL) {
   fn_env(fun) <- wrapped_envir
 
   # Run the computation
-  result <- do.call(fun, argslist)
+  if (is.null(parallel)) {
+    # normal (no parallel)
+    result <- do.call(fun, argslist)
+    saveable_result <- result
+  } else {
+    # is parallel (ooh, it's complicated...)
+    dcp <- do_call_parallel(fun, argslist, parallel, search_result$data)
+    result <- dcp$result
+    saveable_result <- dcp$saveable_result
+  }
 
   # --- Save Result ---
-  save_stash(result, metadata, stash_fa, wrapped_envir$..stash_accessed)
+  save_stash(saveable_result, metadata, stash_fa, wrapped_envir$..stash_accessed)
 
   return(result)
 }

@@ -8,10 +8,12 @@ test_that("parallel parameter", {
       # A) which arguments are parallel
       # B) order or name of arguments
 
+      sleep_time <- 0.5
+
       parallel_function <- function(x, p) {
         data.frame(
           p = p,
-          result = sapply(p, function(i) {Sys.sleep(1); sum(x^i)})
+          result = sapply(p, function(i) {Sys.sleep(sleep_time); sum(x^i)})
         )
       }
 
@@ -21,7 +23,7 @@ test_that("parallel parameter", {
       # returns a data-frame like object, with one column/field named as "p" (first)
       time_result <- system.time(result <- do.call.stash(parallel_function, list(x = 1:20, p = 1:5), parallel = "p"))
       expect_equal(result$result, c(210, 2870, 44100, 722666, 12333300))
-      expect_lte(time_result[["elapsed"]], 2)
+      expect_lte(time_result[["elapsed"]], sleep_time * 3)
     }
   )
 })
